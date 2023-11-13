@@ -27,7 +27,7 @@ import numpy as np
 from tqdm import tqdm
 from math import exp
 import os
-os.environ['CUDA_VISIBLE_DEVICES']='3'
+os.environ['CUDA_VISIBLE_DEVICES']='0'
 import signal
 import json
 import argparse

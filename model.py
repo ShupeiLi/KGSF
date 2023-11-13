@@ -537,6 +537,8 @@ class CrossModel(nn.Module):
         return loss
 
     def save_model(self):
+        if not os.path.exists('saved_model'):
+            os.mkdir('saved_model')
         torch.save(self.state_dict(), 'saved_model/net_parameter1.pkl')
 
     def load_model(self):

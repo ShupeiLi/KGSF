@@ -314,7 +314,7 @@ class CRSdataset(Dataset):
         '''
         context, c_lengths, response, r_length, mask_response, mask_r_length, entity, movie, concept_mask, dbpedia_mask, rec= self.data[index]
         entity_vec = np.zeros(self.entity_num)
-        entity_vector=np.zeros(50,dtype=np.int)
+        entity_vector=np.zeros(50,dtype=np.int64)
         point=0
         for en in entity:
             entity_vec[en]=1
