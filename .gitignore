@@ -3,6 +3,7 @@ redial-2-hop
 redial-3-hop
 redial-2-hop-ori
 data
+saved_model
 .vscode
 
 *.npy

@@ -37,6 +37,7 @@ from model import CrossModel
 import torch.nn as nn
 from torch import optim
 import torch
+import math
 try:
     import torch.version
     import torch.distributed as dist
@@ -117,7 +118,8 @@ class TrainLoop_fusion_rec():
         # Note: we cannot change the type of metrics ahead of time, so you
         # should correctly initialize to floats or ints here
 
-        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0}
+        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0, "ndcg@1": 0, "ndcg@10": 0,
+                          "ndcg@50": 0, "mrr@1": 0, "mrr@10": 0, "mrr@50": 0}
         self.metrics_gen={"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
 
         self.build_model(is_finetune)
@@ -232,14 +234,42 @@ class TrainLoop_fusion_rec():
             if labels[b].item()==0:
                 continue
             target_idx = self.movie_ids.index(labels[b].item())
+            # Recall
             self.metrics_rec["recall@1"] += int(target_idx in pred_idx[b][:1].tolist())
             self.metrics_rec["recall@10"] += int(target_idx in pred_idx[b][:10].tolist())
             self.metrics_rec["recall@50"] += int(target_idx in pred_idx[b][:50].tolist())
+
+            # MRR
+            self.metrics_rec["mrr@1"] += TrainLoop_fusion_rec.mrr_calculation(target_idx, pred_idx[b], 1)
+            self.metrics_rec["mrr@10"] += TrainLoop_fusion_rec.mrr_calculation(target_idx, pred_idx[b], 10)
+            self.metrics_rec["mrr@50"] += TrainLoop_fusion_rec.mrr_calculation(target_idx, pred_idx[b], 50)
+
+            # NDCG
+            self.metrics_rec["ndcg@1"] += TrainLoop_fusion_rec.ndcg_calculation(target_idx, pred_idx[b], 1)
+            self.metrics_rec["ndcg@10"] += TrainLoop_fusion_rec.ndcg_calculation(target_idx, pred_idx[b], 10)
+            self.metrics_rec["ndcg@50"] += TrainLoop_fusion_rec.ndcg_calculation(target_idx, pred_idx[b], 50)
             self.metrics_rec["count"] += 1
+
+    @staticmethod
+    def mrr_calculation(target_idx, pred_idx, k):
+        """Compute mean reciprocal rank (MRR)"""
+        if target_idx in pred_idx[:k].tolist():
+            rank = pred_idx.tolist().index(target_idx)
+            return 1 / (rank + 1)
+        return 0
+
+    @staticmethod
+    def ndcg_calculation(target_idx, pred_idx, k):
+        """Compute NDCG"""
+        if target_idx in pred_idx[:k].tolist():
+            rank = pred_idx.tolist().index(target_idx)
+            return 1 / math.log2(rank + 2)
+        return 0
 
     def val(self,is_test=False):
         self.metrics_gen={"ppl":0,"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
-        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"gate":0,"count":0,'gate_count':0}
+        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0, "ndcg@1": 0, "ndcg@10": 0, "ndcg@50": 0, 
+                          "mrr@1": 0, "mrr@10": 0, "mrr@50": 0, "gate":0,"count":0,'gate_count':0}
         self.model.eval()
         if is_test:
             val_dataset = dataset('data/test_data.jsonl', self.opt)
@@ -387,7 +417,8 @@ class TrainLoop_fusion_gen():
         # Note: we cannot change the type of metrics ahead of time, so you
         # should correctly initialize to floats or ints here
 
-        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0}
+        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0, "ndcg@1": 0, "ndcg@10": 0,
+                          "ndcg@50": 0, "mrr@1": 0, "mrr@10": 0, "mrr@50": 0}
         self.metrics_gen={"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
 
         self.build_model(is_finetune=True)
@@ -457,7 +488,8 @@ class TrainLoop_fusion_gen():
 
     def val(self,is_test=False):
         self.metrics_gen={"ppl":0,"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
-        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"gate":0,"count":0,'gate_count':0}
+        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0, "ndcg@1": 0, "ndcg@10": 0, "ndcg@50": 0, 
+                          "mrr@1": 0, "mrr@10": 0, "mrr@50": 0, "gate":0,"count":0,'gate_count':0}
         self.model.eval()
         if is_test:
             val_dataset = dataset('data/test_data.jsonl', self.opt)

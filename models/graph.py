@@ -134,7 +134,7 @@ class SelfAttentionLayer(nn.Module):
         # e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))
         # attention = F.softmax(e, dim=1)
         e = torch.matmul(torch.tanh(torch.matmul(h, self.a)), self.b).squeeze(dim=1)
-        attention = F.softmax(e)
+        attention = F.softmax(e, dim=-1)
         # attention = F.dropout(attention, self.dropout, training=self.training)
         return torch.matmul(attention, h)
 
