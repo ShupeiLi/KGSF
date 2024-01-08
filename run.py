@@ -118,9 +118,12 @@ class TrainLoop_fusion_rec():
         # Note: we cannot change the type of metrics ahead of time, so you
         # should correctly initialize to floats or ints here
 
-        self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0, "ndcg@1": 0, "ndcg@10": 0,
+        self.metrics_rec={"recall@1": 0, "recall@10": 0, "recall@50": 0, "loss": 0, "count": 0, "ndcg@1": 0, "ndcg@10": 0,
                           "ndcg@50": 0, "mrr@1": 0, "mrr@10": 0, "mrr@50": 0}
-        self.metrics_gen={"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
+        self.metrics_gen={"ppl": 0, "intra-distinct-1": 0, "intra-distinct-2": 0, "intra-distinct-3": 0,
+                          "intra-distinct-4": 0, "bleu-1": 0, "bleu-2": 0, "bleu-3": 0, "bleu-4": 0,
+                          "inter-distinct-1": 0, "inter-distinct-2": 0, "inter-distinct-3": 0, 
+                          "inter-distinct-4": 0, "rouge-1": 0, "rouge-2": 0, "rouge-l": 0, "count":0}
 
         self.build_model(is_finetune)
 
@@ -267,7 +270,10 @@ class TrainLoop_fusion_rec():
         return 0
 
     def val(self,is_test=False):
-        self.metrics_gen={"ppl":0,"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
+        self.metrics_gen={"ppl": 0, "intra-distinct-1": 0, "intra-distinct-2": 0, "intra-distinct-3": 0,
+                          "intra-distinct-4": 0, "bleu-1": 0, "bleu-2": 0, "bleu-3": 0, "bleu-4": 0,
+                          "inter-distinct-1": 0, "inter-distinct-2": 0, "inter-distinct-3": 0, 
+                          "inter-distinct-4": 0, "rouge-1": 0, "rouge-2": 0, "rouge-l": 0, "count":0}
         self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0, "ndcg@1": 0, "ndcg@10": 0, "ndcg@50": 0, 
                           "mrr@1": 0, "mrr@10": 0, "mrr@50": 0, "gate":0,"count":0,'gate_count':0}
         self.model.eval()
@@ -419,7 +425,11 @@ class TrainLoop_fusion_gen():
 
         self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0,"count":0, "ndcg@1": 0, "ndcg@10": 0,
                           "ndcg@50": 0, "mrr@1": 0, "mrr@10": 0, "mrr@50": 0}
-        self.metrics_gen={"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
+        self.metrics_gen={"ppl": 0, "intra-distinct-1": 0, "intra-distinct-2": 0, "intra-distinct-3": 0,
+                          "intra-distinct-4": 0, "bleu-1": 0, "bleu-2": 0, "bleu-3": 0, "bleu-4": 0,
+                          "inter-distinct-1": 0, "inter-distinct-2": 0, "inter-distinct-3": 0, 
+                          "inter-distinct-4": 0, "rouge-1": 0, "rouge-2": 0, "rouge-l": 0, "count":0}
+
 
         self.build_model(is_finetune=True)
 
@@ -487,7 +497,10 @@ class TrainLoop_fusion_gen():
         _=self.val(is_test=True)
 
     def val(self,is_test=False):
-        self.metrics_gen={"ppl":0,"dist1":0,"dist2":0,"dist3":0,"dist4":0,"bleu1":0,"bleu2":0,"bleu3":0,"bleu4":0,"count":0}
+        self.metrics_gen={"ppl": 0, "intra-distinct-1": 0, "intra-distinct-2": 0, "intra-distinct-3": 0,
+                          "intra-distinct-4": 0, "bleu-1": 0, "bleu-2": 0, "bleu-3": 0, "bleu-4": 0,
+                          "inter-distinct-1": 0, "inter-distinct-2": 0, "inter-distinct-3": 0, 
+                          "inter-distinct-4": 0, "rouge-1": 0, "rouge-2": 0, "rouge-l": 0, "count":0}
         self.metrics_rec={"recall@1":0,"recall@10":0,"recall@50":0,"loss":0, "ndcg@1": 0, "ndcg@10": 0, "ndcg@50": 0, 
                           "mrr@1": 0, "mrr@10": 0, "mrr@50": 0, "gate":0,"count":0,'gate_count':0}
         self.model.eval()
