@@ -48,6 +48,7 @@ try:
 except ImportError:
     TORCH_AVAILABLE = False
 from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate import bleu_score as nltkbleu
 import re
 from collections import Counter
 import rouge
@@ -62,21 +63,21 @@ def is_distributed():
 
 def setup_args():
     train = argparse.ArgumentParser()
-    train.add_argument("-max_c_length", "--max_c_length", type=int, default=256)
-    train.add_argument("-max_r_length", "--max_r_length", type=int, default=30)
-    train.add_argument("-batch_size", "--batch_size", type=int, default=32)
-    train.add_argument("-max_count", "--max_count", type=int, default=5)
-    train.add_argument("-use_cuda", "--use_cuda", type=bool, default=True)
-    train.add_argument("-load_dict", "--load_dict", type=str, default=None)
-    train.add_argument("-learningrate", "--learningrate", type=float, default=1e-3)
-    train.add_argument("-optimizer", "--optimizer", type=str, default='adam')
-    train.add_argument("-momentum", "--momentum", type=float, default=0)
-    train.add_argument("-is_finetune", "--is_finetune", type=bool, default=False)
-    train.add_argument("-embedding_type", "--embedding_type", type=str, default='random')
-    train.add_argument("-epoch", "--epoch", type=int, default=30)
-    train.add_argument("-gpu", "--gpu", type=str, default='0,1')
-    train.add_argument("-gradient_clip", "--gradient_clip", type=float, default=0.1)
-    train.add_argument("-embedding_size", "--embedding_size", type=int, default=300)
+    train.add_argument("-max_c_length","--max_c_length",type=int,default=256)
+    train.add_argument("-max_r_length","--max_r_length",type=int,default=30)
+    train.add_argument("-batch_size","--batch_size",type=int,default=32)
+    train.add_argument("-max_count","--max_count",type=int,default=5)
+    train.add_argument("-use_cuda","--use_cuda",type=bool,default=True)
+    train.add_argument("-load_dict","--load_dict",type=str,default=None)
+    train.add_argument("-learningrate","--learningrate",type=float,default=1e-3)
+    train.add_argument("-optimizer","--optimizer",type=str,default='adam')
+    train.add_argument("-momentum","--momentum",type=float,default=0)
+    train.add_argument("-is_finetune","--is_finetune",type=bool,default=True)
+    train.add_argument("-embedding_type","--embedding_type",type=str,default='random')
+    train.add_argument("-epoch","--epoch",type=int,default=30)
+    train.add_argument("-gpu","--gpu",type=str,default='0,1')
+    train.add_argument("-gradient_clip","--gradient_clip",type=float,default=0.1)
+    train.add_argument("-embedding_size","--embedding_size",type=int,default=300)
 
     train.add_argument("-n_heads", "--n_heads", type=int, default=2)
     train.add_argument("-n_layers", "--n_layers", type=int, default=2)
@@ -617,7 +618,11 @@ class TrainLoop_fusion_gen():
             """Correct bleu weights"""
             return [[1 / k for _ in range(k)]]
 
-        bleu_score = sentence_bleu([tar], sen, weights=correct_weights(k))
+        bleu_score = sentence_bleu([tar], 
+                                   sen, 
+                                   weights=correct_weights(k), 
+                                   smoothing_function=nltkbleu.SmoothingFunction(epsilon=1e-12).method1
+                                   )
         return bleu_score
 
     def _distinct(self, outs, k):
@@ -626,9 +631,11 @@ class TrainLoop_fusion_gen():
             for i in range(len(seq) - n + 1):
                 yield tuple(seq[i: i + n])
 
+        print(f"Calculate distinct-{k}.")
         processed_lst = list()
         sample_intra = 0.0
-        for sen in outs:
+        for i in tqdm(range(len(outs))):
+            sen = outs[i]
             for token in sen:
                 s = TrainLoop_fusion_gen._normalize_answer(token)
                 if s != "":
@@ -651,8 +658,8 @@ class TrainLoop_fusion_gen():
         Lower text and remove punctuation, articles and extra whitespace.
         """
         s = s.lower()
-        s = TrainLoop_fusion_gen.re_punc.sub(' ', s)
-        s = TrainLoop_fusion_gen.re_art.sub(' ', s)
+        s = TrainLoop_fusion_gen.re_punc.sub('', s)
+        s = TrainLoop_fusion_gen.re_art.sub('', s)
         # TODO: this could almost certainly be faster with a regex \s+ -> ' '
         return s
 
@@ -706,17 +713,15 @@ class TrainLoop_fusion_gen():
             self.metrics_gen['bleu-4'] += self._bleu(out, tar, 4)
             self.metrics_gen['count'] += 1
 
-        self.metrics_gen['intra-distinct-1'] += self._distinct(generated, 1)
-        self.metrics_gen['intra-distinct-2'] += self._distinct(generated, 2)
-        self.metrics_gen['intra-distinct-3'] += self._distinct(generated, 3)
-        self.metrics_gen['intra-distinct-4'] += self._distinct(generated, 4)
-
         rouge_results = self._rouge(predict_s, golden_s)
         self.metrics_gen['rouge-1'] += rouge_results[0]
         self.metrics_gen['rouge-2'] += rouge_results[1]
         self.metrics_gen['rouge-l'] += rouge_results[2]
-        print(self.metrics_gen['count'])  # TODO: examine ['count'] == len(generated)
-        print(len(generated))
+
+        self.metrics_gen['intra-distinct-1'] += self._distinct(generated, 1)
+        self.metrics_gen['intra-distinct-2'] += self._distinct(generated, 2)
+        self.metrics_gen['intra-distinct-3'] += self._distinct(generated, 3)
+        self.metrics_gen['intra-distinct-4'] += self._distinct(generated, 4)
 
     def vector2sentence(self, batch_sen):
         sentences = []
