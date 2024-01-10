@@ -666,17 +666,9 @@ class TrainLoop_fusion_gen():
     @staticmethod
     def _rouge_score(guess, answers, measure='r'):
         """Compute ROUGE score."""
-        evaluator = rouge.Rouge(
-            metrics=['rouge-n', 'rouge-l'], max_n=2
-        )
+        evaluator = rouge.Rouge()
         try:
-            scores = [
-                evaluator.get_scores(
-                    TrainLoop_fusion_gen._normalize_answer(guess),
-                    TrainLoop_fusion_gen._normalize_answer(a)
-                )
-                for a in answers
-            ]
+            scores = evaluator.get_scores(guess, answers)
         except LookupError:
             return [None, None, None]
 
