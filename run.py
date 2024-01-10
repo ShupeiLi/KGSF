@@ -526,10 +526,10 @@ class TrainLoop_fusion_gen():
                 num += 1
 
             output_metrics_gen = self.val(True)
-            if best_val_gen < output_metrics_gen["dist4"]:
+            if best_val_gen < output_metrics_gen["intra-distinct-4"]:
                 pass
             else:
-                best_val_gen = output_metrics_gen["dist4"]
+                best_val_gen = output_metrics_gen["intra-distinct-4"]
                 self.model.save_model()
                 print("generator model saved once------------------------------------------------")
 
