@@ -92,7 +92,7 @@ def setup_args():
 
     train.add_argument("-n_entity", "--n_entity", type=int, default=64369)
     train.add_argument("-n_relation", "--n_relation", type=int, default=214)
-    train.add_argument("-n_concept", "--n_concept", type=int, default=29308)
+    train.add_argument("-n_concept", "--n_concept", type=int, default=28207)
     train.add_argument("-n_con_relation", "--n_con_relation", type=int, default=48)
     train.add_argument("-dim", "--dim", type=int, default=128)
     train.add_argument("-n_hop", "--n_hop", type=int, default=2)

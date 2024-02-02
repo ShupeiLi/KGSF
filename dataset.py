@@ -42,7 +42,7 @@ class dataset(object):
 
         #self.prepare_word2vec()
         self.word2index = json.load(open('word2index_redial.json', encoding='utf-8'))
-        self.key2index=json.load(open('key2index_3rd.json',encoding='utf-8'))
+        self.key2index=json.load(open('conceptnet_one_hop_key2index.json',encoding='utf-8'))
 
         self.stopwords=set([word.strip() for word in open('stopwords.txt',encoding='utf-8')])
 

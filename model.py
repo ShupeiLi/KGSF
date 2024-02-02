@@ -52,8 +52,8 @@ def _edge_list(kg, n_entity, hop):
     return [(h, t, relation_idx[r]) for h, t, r in edge_list if relation_cnt[r] > 1000], len(relation_idx)
 
 def concept_edge_list4GCN():
-    node2index=json.load(open('key2index_3rd.json',encoding='utf-8'))
-    f=open('conceptnet_edges2nd.txt',encoding='utf-8')
+    node2index=json.load(open('conceptnet_one_hop_key2index.json',encoding='utf-8'))
+    f=open('conceptnet_one_hop_edges.txt',encoding='utf-8')
     edges=set()
     stopwords=set([word.strip() for word in open('stopwords.txt',encoding='utf-8')])
     for line in f:
@@ -140,8 +140,8 @@ class CrossModel(nn.Module):
         self.info_db_norm = nn.Linear(opt['dim'], opt['dim'])
         self.info_output_db = nn.Linear(opt['dim'], opt['n_entity'])
         self.info_output_con = nn.Linear(opt['dim'], opt['n_concept']+1)
-        self.info_con_loss = nn.MSELoss(size_average=False,reduce=False)
-        self.info_db_loss = nn.MSELoss(size_average=False,reduce=False)
+        self.info_con_loss = nn.MSELoss(reduction='none')
+        self.info_db_loss = nn.MSELoss(reduction='none')
 
         self.user_representation_to_bias_1 = nn.Linear(opt['dim'], 512)
         self.user_representation_to_bias_2 = nn.Linear(512, len(dictionary) + 4)
@@ -153,7 +153,7 @@ class CrossModel(nn.Module):
 
         edge_list, self.n_relation = _edge_list(self.kg, opt['n_entity'], hop=2)
         edge_list = list(set(edge_list))
-        print(len(edge_list), self.n_relation)
+        # print(len(edge_list), self.n_relation)
         self.dbpedia_edge_sets=torch.LongTensor(edge_list).cuda()
         self.db_edge_idx = self.dbpedia_edge_sets[:, :2].t()
         self.db_edge_type = self.dbpedia_edge_sets[:, 2]
